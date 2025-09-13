@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, jsonify
 import os
+import openai
 from dotenv import load_dotenv
-from openai import OpenAI
 
 load_dotenv()
 
 app = Flask(__name__)
-client = OpenAI(api_key=os.environ["API_KEY"])
+openai.api_key = os.environ["API_KEY"]
 
 @app.route('/')
 def home():
@@ -15,21 +15,21 @@ def home():
 @app.route('/chat', methods=['POST'])
 def chat():
     user_message = request.json['message']
-
+    
     system_prompt = "This is AI for Laurent!"
-
+    
     try:
-        chat_completion = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
-            ],
-            model="gpt-4o",
+            ]
         )
-
-        response_text = chat_completion.choices[0].message.content
+        
+        response_text = response.choices[0].message.content
         return jsonify({"response": response_text})
-
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
